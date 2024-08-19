@@ -2,3 +2,5 @@ test.js
 node_modules
 dist-a
 nginx/.gitkeep
+.env.development
+.env.production
