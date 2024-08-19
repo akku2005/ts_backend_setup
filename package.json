@@ -15,9 +15,7 @@
   "author": "",
   "license": "ISC",
   "lint-staged": {
-    "*.ts": [
-      "npm run lint:fix"
-    ]
+    "*.ts": "npm run lint:fix"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.4.0",
