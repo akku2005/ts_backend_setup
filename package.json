@@ -9,6 +9,8 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "formate:check": "prettier --check",
+    "format:fix": "prettier . --fix",
     "prepare": "husky install"
   },
   "keywords": [],
@@ -16,7 +18,8 @@
   "license": "ISC",
   "lint-staged": {
     "*.ts": [
-      "npm run lint:fix"
+      "npm run lint:fix",
+      "npm run format:fix"
     ]
   },
   "devDependencies": {
@@ -28,8 +31,10 @@
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
     "eslint": "^9.9.0",
+    "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.9",
+    "prettier": "3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.2.0"
