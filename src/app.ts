@@ -5,6 +5,17 @@ import globalErrorHandler from './middleware/globalErrorHandler';
 import responseMessage from './constants/responseMessage';
 import httpError from './utils/httpError';
 
+// Custom Error Class to include HTTP status codes
+class HttpError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = 'HttpError';
+  }
+}
+
 const app: Application = express();
 
 // Middlewares
@@ -16,13 +27,9 @@ app.use('/api/v1', router);
 
 // 404 Handler
 app.use((req: Request, _: Response, next: NextFunction) => {
-  try {
-    // Throwing a custom 404 error
-    throw new Error(responseMessage.NOT_FOUND('route'));
-  } catch (err) {
-    // Handling the error using the httpError utility
-    httpError(next, err, req, 404);
-  }
+  // Create a new instance of HttpError for 404
+  const notFoundError = new HttpError(responseMessage.NOT_FOUND('route'), 404);
+  httpError(next, notFoundError, req, notFoundError.statusCode);
 });
 
 // Global Error Handler

@@ -18,7 +18,8 @@ export default tseslint.config({
     eslintConfigPrettier,
   ],
   rules: {
-    'no-console': 'off', // Disable no-console rule
+    'no-console': 'off',
+    'no-useless-catch': 0,
     quotes: ['error', 'single', { allowTemplateLiterals: true }],
   },
 });

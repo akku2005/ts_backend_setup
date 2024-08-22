@@ -6,11 +6,18 @@ import httpError from '../utils/httpError';
 export default {
   self: (req: Request, res: Response, next: NextFunction) => {
     try {
-      // user fetch
-      //   throw new Error('this is error');
+      // Simulate fetching the user
+      // throw new Error('This is an error');
       httpResponse(req, res, 200, responseMessage.SUCCESS);
     } catch (error) {
-      httpError(next, error, req, 500);
+      // Ensure error is treated as an instance of Error
+      if (error instanceof Error) {
+        httpError(next, error, req, 500);
+      } else {
+        // Create a generic error if the type is unknown
+        const genericError = new Error(responseMessage.SOMETHING_WENT_WRONG);
+        httpError(next, genericError, req, 500);
+      }
     }
   },
 };
