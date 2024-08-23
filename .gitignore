@@ -2,5 +2,8 @@ test.js
 node_modules
 dist-a
 nginx/.gitkeep
+
+# Ignore environment variable files
+.env*
 .env.development
 .env.production
