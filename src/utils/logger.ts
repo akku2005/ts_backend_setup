@@ -7,12 +7,13 @@ import util from 'util';
 import config from '../config/config';
 import { EApplicationEnvironment } from '../constants/application';
 import path from 'path';
-import * as sourceMapSurrport from 'source-map-support';
-import { blue, red, yellow, green, magenta } from 'colorette';
+import * as sourceMapSupport from 'source-map-support';
+import { blue, red, yellow, magenta } from 'colorette';
 import 'winston-mongodb';
 import { MongoDBTransportInstance } from 'winston-mongodb';
+
 // Linking Trace Support
-sourceMapSurrport.install();
+sourceMapSupport.install();
 
 const colorizeLevel = (level: string) => {
   switch (level) {
@@ -26,48 +27,52 @@ const colorizeLevel = (level: string) => {
       return level;
   }
 };
+
 // Define the log format for the console output
 const consoleLogFormat = format.printf(
   ({ level, message, timestamp, meta = {} }) => {
     const customLevel = colorizeLevel(level.toUpperCase());
-    const customTimestamp = green(timestamp as string);
-    const customMeta = util.inspect(meta, {
-      showHidden: false,
-      depth: null,
-      colors: true,
-    });
+    const customTimestamp = magenta(timestamp as string);
+    const customMeta =
+      Object.keys(meta).length > 0
+        ? util.inspect(meta, { colors: true, depth: null })
+        : '{}';
 
     return `${customLevel}[${customTimestamp}] ${message}\n${magenta('META')}: ${customMeta}\n`;
   },
 );
 
 // Define the log format for the file output
-const fileLogFormat = format.printf((info) => {
-  const { level, message, timestamp, meta = {} } = info;
-  const logMeta: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(meta)) {
-    if (value instanceof Error) {
-      logMeta[key] = {
-        name: value.name,
-        message: value.message,
-        trace: value.stack || '',
-      };
-    } else {
-      logMeta[key] = value;
+const fileLogFormat = format.printf(
+  ({ level, message, timestamp, meta = {} }) => {
+    const logMeta: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(meta)) {
+      if (value instanceof Error) {
+        logMeta[key] = {
+          name: value.name,
+          message: value.message,
+          trace: value.stack || '',
+        };
+      } else {
+        logMeta[key] = value;
+      }
     }
-  }
-  const logData = {
-    level: level.toUpperCase(),
-    message,
-    timestamp,
-    meta: logMeta,
-  };
-  return JSON.stringify(logData, null, 4);
-});
+    const logData = {
+      level: level.toUpperCase(),
+      message,
+      timestamp,
+      meta: logMeta,
+    };
+    return JSON.stringify(logData, null, 4);
+  },
+);
 
 // Create a function to return an array of console transports
 const createConsoleTransport = (): Array<ConsoleTransportInstance> => {
-  if (config.ENV === EApplicationEnvironment.DEVELOPMENT) {
+  if (
+    config.ENV === EApplicationEnvironment.DEVELOPMENT ||
+    config.ENV === EApplicationEnvironment.PRODUCTION
+  ) {
     return [
       new transports.Console({
         level: 'info',
@@ -89,19 +94,23 @@ const createFileTransport = (): Array<FileTransportInstance> => {
   ];
 };
 
+// MongoDB transport setup
 const mongodbTransport = (): Array<MongoDBTransportInstance> => {
-  return [
-    new transports.MongoDB({
-      level: 'info',
-      db: config.DATABASE_URL,
-      metaKey: 'meta',
-      expireAfterSeconds: 3600 * 24 * 30,
-      options: {
-        useUnifiedTopology: true,
-      },
-      collection: 'application-log',
-    }),
-  ];
+  if (config.DATABASE_URL) {
+    return [
+      new transports.MongoDB({
+        level: 'info',
+        db: config.DATABASE_URL as string, // Ensure the URL is correctly formatted
+        metaKey: 'meta',
+        expireAfterSeconds: 3600 * 24 * 30, // Expire logs after 30 days
+        options: {
+          useUnifiedTopology: true,
+        },
+        collection: 'application-log',
+      }),
+    ];
+  }
+  return [];
 };
 
 // Create and export the logger instance
@@ -110,9 +119,9 @@ const logger = createLogger({
     meta: {},
   },
   transports: [
-    ...createConsoleTransport(), // Include console transport if in development
+    ...createConsoleTransport(),
     ...createFileTransport(),
-    ...mongodbTransport(), // Include file transport
+    ...mongodbTransport(),
   ],
 });
 
