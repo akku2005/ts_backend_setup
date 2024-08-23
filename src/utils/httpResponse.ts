@@ -3,6 +3,7 @@ import { THttpResponse } from '../types/types';
 import config from '../config/config';
 import { EApplicationEnvironment } from '../constants/application';
 import Logger from '../utils/logger';
+
 export default (
   req: Request,
   res: Response,
@@ -21,11 +22,11 @@ export default (
     message: responseMessage,
     data: data,
   };
-  //   log
-  Logger.info(`CONTROLLER_RESPONSE`, {
+
+  Logger.info('CONTROLLER_RESPONSE', {
     meta: response,
   });
-  //   production
+
   if (config.ENV === EApplicationEnvironment.PRODUCTION) {
     delete response.request.ip;
   }

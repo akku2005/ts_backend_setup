@@ -1,17 +1,22 @@
 import { createLogger, format, transports } from 'winston';
+import {
+  ConsoleTransportInstance,
+  FileTransportInstance,
+} from 'winston/lib/winston/transports';
+import util from 'util';
+import config from '../config/config';
 import path from 'path';
 import * as sourceMapSupport from 'source-map-support';
 import { blue, red, yellow, green, magenta } from 'colorette';
 import 'winston-mongodb';
 import { MongoDBTransportInstance } from 'winston-mongodb';
-import config from '../config/config';
 
 // Linking Trace Support
 sourceMapSupport.install();
 
 // Helper function to colorize log levels for the console output
-const colorizeLevel = (level: string): string => {
-  switch (level.toUpperCase()) {
+const colorizeLevel = (level: string) => {
+  switch (level) {
     case 'ERROR':
       return red(level);
     case 'INFO':
@@ -26,7 +31,7 @@ const colorizeLevel = (level: string): string => {
 // Define the log format for the console output
 const consoleLogFormat = format.printf(
   ({ level, message, timestamp, meta = {} }) => {
-    const customLevel = colorizeLevel(level);
+    const customLevel = colorizeLevel(level.toUpperCase());
     const customTimestamp = green(timestamp as string);
     const formattedMeta = util.inspect(meta, {
       showHidden: false,
@@ -64,35 +69,41 @@ const fileLogFormat = format.printf(
 );
 
 // Create a function to return an array of console transports
-const createConsoleTransport = () => [
-  new transports.Console({
-    level: 'info',
-    format: format.combine(format.timestamp(), consoleLogFormat),
-  }),
-];
+const createConsoleTransport = (): Array<ConsoleTransportInstance> => {
+  return [
+    new transports.Console({
+      level: 'info',
+      format: format.combine(format.timestamp(), consoleLogFormat),
+    }),
+  ];
+};
 
 // Create a function to return an array of file transports
-const createFileTransport = () => [
-  new transports.File({
-    filename: path.join(__dirname, '../', '../', 'logs', `${config.ENV}.log`),
-    level: 'info',
-    format: format.combine(format.timestamp(), fileLogFormat),
-  }),
-];
+const createFileTransport = (): Array<FileTransportInstance> => {
+  return [
+    new transports.File({
+      filename: path.join(__dirname, '../', '../', 'logs', `${config.ENV}.log`),
+      level: 'info',
+      format: format.combine(format.timestamp(), fileLogFormat),
+    }),
+  ];
+};
 
 // Create a function to return an array of MongoDB transports
-const createMongoDBTransport = () => [
-  new transports.MongoDB({
-    level: 'info',
-    db: config.DATABASE_URL as string,
-    metaKey: 'meta',
-    expireAfterSeconds: 3600 * 24 * 30, // 30 days expiration
-    options: {
-      useUnifiedTopology: true,
-    },
-    collection: 'application-log',
-  }),
-];
+const createMongoDBTransport = (): Array<MongoDBTransportInstance> => {
+  return [
+    new transports.MongoDB({
+      level: 'info',
+      db: config.DATABASE_URL as string,
+      metaKey: 'meta',
+      expireAfterSeconds: 3600 * 24 * 30, // 30 days expiration
+      options: {
+        useUnifiedTopology: true,
+      },
+      collection: 'application-log',
+    }),
+  ];
+};
 
 // Create and export the logger instance
 const logger = createLogger({
