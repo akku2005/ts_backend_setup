@@ -5,6 +5,7 @@ import globalErrorHandler from './middleware/globalErrorHandler';
 import responseMessage from './constants/responseMessage';
 import httpError from './utils/httpError';
 import helmet from 'helmet';
+import cors from 'cors';
 
 // Custom Error Class to include HTTP status codes
 class HttpError extends Error {
@@ -21,6 +22,13 @@ const app: Application = express();
 
 // Middlewares
 app.use(helmet());
+app.use(
+  cors({
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTION', 'HEAD'],
+    origin: ['http://client.com'],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../', 'public')));
 
